@@ -1,14 +1,25 @@
 const { readFileSync } = require('fs');
 
 function gerarFaturaStr(fatura, pecas) {
-  let totalFatura = 0;
-  let creditos = 0;
   let faturaStr = `Fatura ${fatura.cliente}\n`;
-  //const formato = new Intl.NumberFormat("pt-BR",
-    //{
-     // style: "currency", currency: "BRL",
-     // minimumFractionDigits: 2
-    //}).format;
+  for (let apre of fatura.apresentacoes) {
+    faturaStr += `  ${getPeca(apre).nome}: ${formatarMoeda(calcularTotalApresentacao(apre))} (${apre.audiencia} assentos)\n`;
+  }
+  faturaStr += `Valor total: ${formatarMoeda(calcularTotalFatura())}\n`;
+  faturaStr += `Créditos acumulados: ${calcularTotalCreditos()} \n`;
+
+
+  function calcularTotalCreditos() {
+    return fatura.apresentacoes.reduce((total, apre) => {
+      return total + calcularCredito(apre);
+    }, 0);
+  }
+
+  function calcularTotalFatura() {
+    return fatura.apresentacoes.reduce((total, apre) => {
+      return total + calcularTotalApresentacao(apre);
+    }, 0);
+  }
 
   function formatarMoeda(valor) {
     return new Intl.NumberFormat("pt-BR",
@@ -42,14 +53,7 @@ function gerarFaturaStr(fatura, pecas) {
         throw new Error(`Peça desconhecia: ${getPeca(apre).tipo}`);
     }
 
-    // créditos para próximas contratações
-    //creditos += Math.max(apre.audiencia - 30, 0);
-    //if (getPeca(apre).tipo === "comedia") 
-    //creditos += Math.floor(apre.audiencia / 5);
-
-    // mais uma linha da fatura
-    faturaStr += `  ${getPeca(apre).nome}: ${formatarMoeda(total)} (${apre.audiencia} assentos)\n`;
-    totalFatura += total;
+    return total;
   }
 
   function calcularCredito(apre) {
@@ -60,19 +64,6 @@ function gerarFaturaStr(fatura, pecas) {
     return creditos;
   }
 
-  for (let apre of fatura.apresentacoes) {
-    // const peca = getPeca(apre);
-    calcularTotalApresentacao(apre);
-    creditos += calcularCredito(apre);
-  }
-
-
-
-
-
-
-  faturaStr += `Valor total: ${formatarMoeda(totalFatura)}\n`;
-  faturaStr += `Créditos acumulados: ${creditos} \n`;
   return faturaStr;
 }
 
